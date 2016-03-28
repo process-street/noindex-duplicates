@@ -5,8 +5,8 @@
 
 // ********** Add the menu entry **********
 function fix_duplicates_menu() {
-	add_menu_page( 'Fix Duplicates', 'Fix Duplicates', 'delete_pages', 'fix_duplicates', 'fix_duplicates_admin_main', plugins_url( '/images/fix-duplicates-icon-16.png', __FILE__ ) );
-	add_submenu_page( 'fix_duplicates', 'Duplicate Entries', 'Duplicate Entries', 'delete_pages', 'fix_duplicates', 'fix_duplicates_admin_main' );
+	add_menu_page( 'Noindex Duplicates', 'Noindex Duplicates', 'edit_pages', 'fix_duplicates', 'fix_duplicates_admin_main', plugins_url( '/images/fix-duplicates-icon-16.png', __FILE__ ) );
+	add_submenu_page( 'fix_duplicates', 'Duplicate Entries', 'Duplicate Entries', 'edit_pages', 'fix_duplicates', 'fix_duplicates_admin_main' );
 }
 add_action( 'admin_menu', 'fix_duplicates_menu', 8 );	// priority 9 to fire before CPT added to menu
 // **************************************
@@ -640,8 +640,7 @@ function apply_custom_meta($post_id){
 
 // ********** Function to display footer in Admin area **********
 function fix_duplicates_admin_footer() {
-	echo '<div style="clear:both;"></div><p class="fix-duplicates-copyright"><small>Noindex Duplicates is based on Fix Duplicates.</small></p>';
-	echo '<div style="clear:both;"></div><p class="fix-duplicates-copyright"><small>Fix Duplicates is copyrighted 2013 by <a target="_blank" href="http://scratch99.com/">Stephen Cronin</a> and is released under the GNU General Public License (version 2 or later).</small></p>';
+	echo '<div style="clear:both;"></div><p class="fix-duplicates-copyright"><small><a href="https://github.com/process-street/noindex-duplicates" >Noindex Duplicates </a> is based on <a href="http://scratch99.com/">Stephen Cronin\'s </a> Fix Duplicates.</small></p>';
 }
 // *******************************************************
 ?>

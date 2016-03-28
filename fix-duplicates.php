@@ -1,28 +1,13 @@
 <?php
 /*
-Plugin Name: Fix Duplicates
-Plugin URI: http://scratch99.com/products/fix-duplicates/
-Description: Find and delete duplicates posts, specifying which one to keep (newest, oldest or manual selection). There is a premium extension that allows you to 301 redirect duplicates to the post you are keeping.
-Version: 1.0.3
-Date: 12 July 2015
-Author: Stephen Cronin (Scratch99 Design)
-Author URI: http://scratch99.com/
+Plugin Name: Noindex Duplicates
+Plugin URI: https://github.com/process-street/noindex-duplicates
+Description: This plugin is based on fix-duplicates plugin. Find and tag as noindex duplicate posts, the oldest one will be kept. Check our <a href="https://github.com/process-street/noindex-duplicates"> Github repository </a> for further details.
+Version: 1.0.0
+Date: March 2016
+Author: Process Street
+Author URI: http://www.process.st/
 
-   Copyright 2014  Stephen Cronin  (email : sjc@scratch99.com)
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
@@ -30,7 +15,7 @@ Author URI: http://scratch99.com/
 function fix_duplicates_init() {
 
 	// set the current plugin version
-	$fix_duplicates_version = '1.0.3';
+	$fix_duplicates_version = '1.0.0';
 
 	// get the plugin options
 	$fix_duplicates_options = get_option( 'fix_duplicates_options' );
