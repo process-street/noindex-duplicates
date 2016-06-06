@@ -14,15 +14,15 @@ The plugin shows all the duplicates even if only two of them are 'noindexed'. Wh
 
 In order to make use of this functionality, the code below has to be added to the functions.php file:
 
-function apply_noindex_meta_tag(){
+	function apply_noindex_meta_tag(){
 
-    $noindex = get_post_meta( get_the_ID(), 'noindex', true );
+    		$noindex = get_post_meta( get_the_ID(), 'noindex', true );
 
-    if ( (int) $noindex === 1 ) {
-        echo '<meta name="robots" content="noindex" />' . "\n";
-    }
-}
-add_action( 'wp_head', 'apply_noindex_meta_tag' );
+    		if ( (int) $noindex === 1 ) {
+        		echo '<meta name="robots" content="noindex" />' . "\n";
+    		}
+	}
+	add_action( 'wp_head', 'apply_noindex_meta_tag' );
 
 = Compatibility =
 * This plugin requires WordPress 2.8 or above.
