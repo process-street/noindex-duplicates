@@ -16,11 +16,11 @@ In order to make use of this functionality, the code below has to be added to th
 
 	function apply_noindex_meta_tag(){
 
-    	$noindex = get_post_meta( get_the_ID(), 'noindex', true );
+    		$noindex = get_post_meta( get_the_ID(), 'noindex', true );
 
-    	if ( (int) $noindex === 1 ) {
-        	echo '<meta name="robots" content="noindex" />' . "\n";
-    	}
+    		if ( (int) $noindex === 1 ) {
+        		echo '<meta name="robots" content="noindex" />' . "\n";
+    		}
 	}
 	add_action( 'wp_head', 'apply_noindex_meta_tag' );
 
