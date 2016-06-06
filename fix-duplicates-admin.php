@@ -132,15 +132,18 @@ function fix_duplicates_admin_main() {
 	}
 
 	$meta_tag_noindex_select = "SELECT post_id FROM $meta_tbname WHERE $meta_tbname.meta_key = 'noindex' and $meta_tbname.meta_value =1";
+	$no_empty_posts_string = "$tablename.post_content != ' '";
 
 	// Get the number of duplicate titles
 	$fix_duplicates_count_query = 
-		"SELECT COUNT(post_title) FROM ( 
-			SELECT post_title FROM $tablename 
+		"SELECT COUNT(post_content) FROM (
+			SELECT post_content FROM $tablename
 			WHERE $post_type_string $fix_duplicates_search_string AND $fix_duplicates_show_drafts_string
+			AND $no_empty_posts_string
 			 	AND $tablename.id NOT IN ( $meta_tag_noindex_select )
-			GROUP BY post_title HAVING COUNT(*)>1 
+			GROUP BY post_content HAVING COUNT(*)>1
 		) AS t";
+	var_dump($fix_duplicates_count_query);
 	$fix_duplicates_result_count = $wpdb->get_var( $fix_duplicates_count_query );
 
 	// deal with pagination (needs to happen after we have total results, but before we query for individual entries)
@@ -173,16 +176,16 @@ function fix_duplicates_admin_main() {
 	// get the duplicates from the DB
 	$fix_duplicates_query = 
 		"SELECT t1.* FROM $tablename AS t1 INNER JOIN ( 
-			SELECT post_title FROM $tablename 
+			SELECT post_content FROM $tablename
 			WHERE $post_type_string $fix_duplicates_search_string
 				AND $fix_duplicates_show_drafts_string
 				AND $tablename.id not in ( ". $meta_tag_noindex_select. "  )
-			GROUP BY post_title HAVING COUNT(*)>1 LIMIT $offset, $numtoshow
+			GROUP BY post_content HAVING COUNT(*)>1 LIMIT $offset, $numtoshow
 		) AS t2 
-		ON t1.post_title = t2.post_title 
+		ON TRIM(t1.post_content) = TRIM(t2.post_content)
 		WHERE " . str_replace( $tablename, 't1', $post_type_string ) . "
 			AND " . str_replace( $tablename, 't1', $fix_duplicates_show_drafts_string ) . "
-		ORDER BY t1.post_title, t1.post_date DESC";
+		ORDER BY t1.post_content, char_length(t1.post_content), t1. post_title, t1.post_date DESC;";
 	$fix_duplicates_result = $wpdb->get_results( $fix_duplicates_query, ARRAY_A );
 
 	// if there are no duplicates, tell them (but don't worry for search results as it will tell them there are 0 titles)
@@ -223,7 +226,7 @@ function fix_duplicates_admin_main() {
 						<?php endif; ?>
 						
 						<div class="fix-duplicates-results-count">
-						<?php echo $fix_duplicates_result_count; ?> duplicate titles
+						<?php echo $fix_duplicates_result_count; ?> duplicate groups
 						</div>
 					</div>
 					
@@ -299,13 +302,16 @@ function fix_duplicates_admin_main() {
 						
 						<!-- Form: Form for bulk actions etc -->
 						<form id="fix-duplicates-bulk-form" class="fix-duplicates-bulk-form" action="" method="POST">
-							<div class="alignleft actions">
+						<!-- 	<div class="alignleft actions">
 								<select name='action'>
 									<option value='-1' selected='selected'>Bulk Actions</option>
 									<option value='noindexer'>Noindex Selected</option>
 								</select>
 								<input type="submit" name="" id="doaction" class="button-secondary action" value="Apply"  />
 							</div>
+							This was made to apply for selected items, but it's still keeping the oldest one, which can be confusing
+						-->
+
 
 						<br class="clear" />
 					</div>
@@ -336,7 +342,7 @@ function fix_duplicates_admin_main() {
 						<!-- Table headers -->
 						<thead>
 							<tr>
-								<th scope="col" id="cb" class="manage-column column-cb check-column check-title"><input type="checkbox" /></th>
+								<th scope="col" id="cb" class="manage-column column-cb check-column check-title"><!--<input type="checkbox" />--></th>
 								<th scope="col" id="title" class="manage-column column-title">Title</th>
 								<th scope="col" id="post_id" class="manage-column column-post_id">ID</th>
 								<th scope="col" id="author" class="manage-column column-author">Author</th>
@@ -356,7 +362,7 @@ function fix_duplicates_admin_main() {
 				foreach ( $fix_duplicates_result as $key => $value ) : 
 				
 					// if this title doesn't match previous row's title, we're on to a new duplicate, so start a new tbody and add summary / control row
-					if ( trim( strtolower( $fix_duplicates_result[ $key-1 ][ 'post_title' ] ) ) != trim( strtolower( $value[ 'post_title' ] ) ) ) :
+					if ( trim( strtolower( $fix_duplicates_result[ $key-1 ][ 'post_content' ] ) ) != trim( strtolower( $value[ 'post_content' ] ) ) ) :
 				?>
 						<tbody id="fix-duplicates-group-<?php echo $fix_duplicates_group_no; ?>">
 
@@ -365,14 +371,17 @@ function fix_duplicates_admin_main() {
 								<td scope="row" class="check-column"
 										<?php echo apply_filters( 'fix_duplicates_columns_colspan', 'colspan="8"' );
 										?>>
-									<strong><?php echo $value[ 'post_title' ]; ?></strong>
-									<?php
+									<strong>
+										<?php
+											echo $value[ 'post_title' ];
+										?></strong>
+										<?php
 										// Work out the count by looping through the results. Also store all entries for this title for noindexing
 										$count = 0;
 										$fix_duplicates_this_duplicate_array = array();
 										foreach ( $fix_duplicates_result as $key2 => $value2 ) {
-											if ( trim( strtolower( $fix_duplicates_result[ $key2 ][ 'post_title' ] ) ) ==
-														trim( strtolower( $value[ 'post_title' ] ) ) ) {
+											if ( trim( strtolower( $fix_duplicates_result[ $key2 ][ 'post_content' ] ) ) ==
+														trim( strtolower( $value[ 'post_content' ] ) ) ) {
 												$fix_duplicates_this_duplicate_array[] = $fix_duplicates_result[ $key2 ][ 'ID' ]; 
 												$count++;
 											}
@@ -396,7 +405,9 @@ function fix_duplicates_admin_main() {
 
 							<!-- Individual title -->
 							<tr id="post-<?php echo absint( $value[ 'ID' ] ); ?>" class="duplicate-group-<?php echo $fix_duplicates_group_no - 1; ?>" valign="top">
-								<th scope="row" class="check-column"><input type="checkbox" name="post[]" value="<?php echo absint( $value[ 'ID' ] ); ?>" /></th>
+								<th scope="row" class="check-column">
+									<!-- <input type="checkbox" name="post[]" value="<?php //echo absint( $value[ 'ID' ] ); ?>" /> -->
+								</th>
 								<td class="post-title page-title column-title">
 									<strong>
 										<a class="row-title" href="<?php echo admin_url( 'post.php?post=' . absint( $value[ 'ID' ] ) . '&amp;action=edit' ); ?>" title="Edit &#8220;<?php echo $value[ 'post_title' ]; ?>&#8221;"><?php echo get_permalink( absint( $value[ 'ID' ] ) ); ?></a>
@@ -435,7 +446,7 @@ function fix_duplicates_admin_main() {
 
 				<?php
 					// if this title doesn't match next row's title, close the tbody
-					if ( trim( strtolower( $fix_duplicates_result[ $key + 1 ][ 'post_title' ] ) ) != trim( strtolower( $value[ 'post_title' ] ) ) ) :	?>
+					if ( trim( strtolower( $fix_duplicates_result[ $key + 1 ][ 'post_content' ] ) ) != trim( strtolower( $value[ 'post_content' ] ) ) ) :	?>
 						</tbody>
 				<?php endif;
 				endforeach;
@@ -446,11 +457,14 @@ function fix_duplicates_admin_main() {
 					<!-- Bottom navigation area -->
 					<div class="tablenav bottom">
 						<div class="alignleft actions">
+							<!--
 							<select name='action2'>
 								<option value='-1' selected='selected'>Bulk Actions</option>
 								<option value='noindexer'>Noindex Selected</option>
 							</select>
 							<input type="submit" name="" id="doaction2" class="button-secondary action" value="Apply"  />
+							PS taken out since could cause confusion
+							-->
 						</div>
 
 						<!-- Form: nonce for security purposes -->
@@ -559,6 +573,7 @@ function fix_duplicates_process_post_actions() {
 	// else if $_POST['duplicate_entry_all_apply'] is set, then this the bulk "noindex, keep" action
 	elseif ( esc_html( $_POST[ 'duplicate_entry_all_apply' ] ) ) {
 		// if this is set to one, then we are noindexing all on this page
+
 		if ( absint( $_POST[ 'duplicate_entry_noindex_all' ] ) ) {
 			foreach ( $_POST[ 'duplicate_entry_items_to_noindex' ] as $key => $value ) {
 
