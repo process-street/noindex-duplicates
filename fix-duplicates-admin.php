@@ -143,7 +143,7 @@ function fix_duplicates_admin_main() {
 			 	AND $tablename.id NOT IN ( $meta_tag_noindex_select )
 			GROUP BY post_content HAVING COUNT(*)>1
 		) AS t";
-	var_dump($fix_duplicates_count_query);
+	
 	$fix_duplicates_result_count = $wpdb->get_var( $fix_duplicates_count_query );
 
 	// deal with pagination (needs to happen after we have total results, but before we query for individual entries)
